@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>canvas连线</title>
+    <style>
+        *{
+            margin: 0;
+            padding:0;
+        }
+        #canvas{
+            color: #a93dca;
+            background: #000000;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+</body>
+<script type="text/javascript">
+    //浏览器 更新画面 1000/60 浏览器更新频率
+    window.requestAnimationFrame = (function(){
+        return window.requestAnimationFrame ||
+                window.webkitRequestAnimationFrame ||
+                window.mozRequestAnimationFrame ||
+                function(callback){
+                    window.setTimeout(callback,1000/60)
+                }
+    })();
+
+
+    var canvas = document.getElementById('canvas');
+    var ctx = canvas.getContext("2d");
+    //设置canvas宽高
+    var w = canvas.width = window.innerWidth;
+    var h = canvas.height = window.innerHeight;
+    var num = 300; //粒子个数
+
+    var mouseMove ={};
+    var data =[];
+    window.onresize=function(){
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    };
+
+    document.onmousemove = function (e){
+        mouseMove.x = e.pageX;
+        mouseMove.y = e.pageY;  //获取鼠标坐标
+        for (var i=0;i< num; i++ ){
+            data[i].isMove =false;
+        }
+    };
+
+    document.onmouseleave =function (){
+        mouseMove ={};
+        for (var i=0;i< num; i++ ){
+            data[i].isMove =false;
+        }
+    };
+    //初始化
+    for (var i=0;i<num;i++){
+        data[i]={};
+        data[i].x =Math.random()*w;
+        data[i].y =Math.random()*h;
+        data[i].ax = Math.random()*3-2;
+        data[i].ay = Math.random()*3-2;
+        data[i].isMove =false;     //粒子是否被吸附
+        drawRound(data[i].x,data[i].y)
+
+    }
+
+    //帧动画
+    function move(){
+        ctx.clearRect(0,0,w,h);
+
+        for (var i=0;i<num;i++){
+
+            data[i].x += data[i].ax;    //x坐标更新
+            if(data[i].x>w || data[i].x <=0){data[i].ax = -data[i].ax;}
+            data[i].y += data[i].ay;    //y坐标更新
+            if(data[i].y>h || data[i].y <=0){data[i].ay = -data[i].ay;}
+            drawRound(data[i].x,data[i].y);
+//            console.log(data[i].x,data[i].y)
+
+            for (var j=i+1;j<num;j++){
+                if( (data[i].x-data[j].x)*(data[i].x-data[j].x) + (data[i].y-data[j].y)*(data[i].y-data[j].y) < 50*50){
+                    drawLine(data[i].x,data[i].y,data[j].x,data[j].y);
+                }
+            }
+
+            //如果存在 鼠标坐标 执行
+            if( mouseMove.x ){
+                var l =(mouseMove.x-data[i].x)*(mouseMove.x-data[i].x)+(mouseMove.y-data[i].y)*(mouseMove.y-data[i].y);
+                if (data[i].isMove){
+                    if( l > 150*150){
+                        data[i].ay = -data[i].ay;
+                        data[i].ax = -data[i].ax;
+                    }
+                }else {
+                    if( l < 150*150){
+                        data[i].isMove = true;
+                    }
+                }
+            }
+        }
+        window.requestAnimationFrame(move);
+    }
+
+    move();
+
+    //画园
+    function  drawRound(x,y){
+        ctx.fillStyle = "pink";
+        ctx.beginPath();
+        ctx.arc(x,y,1,0,2*Math.PI,false);
+        ctx.closePath();
+        ctx.fill();
+    }
+
+    //划线
+    function  drawLine(x1,y1,x2,y2){
+        var lin = ctx.createLinearGradient(x1,y1,x2,y2);
+        lin.addColorStop(0,randomColor());
+        lin.addColorStop(1,randomColor());
+        ctx.strokeStyle = lin;
+        ctx.moveTo(x1,y1);
+        ctx.lineTo(x2,y2);
+        ctx.stroke();
+    }
+    //随机颜色
+    function randomColor(){
+        var r =Math.floor(Math.random()*255);
+        var g =Math.floor(Math.random()*255);
+        var b =Math.floor(Math.random()*255);
+        return "rgb("+r+","+g+","+b+")";
+    }
+</script>
+</html>
